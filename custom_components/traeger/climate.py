@@ -110,7 +110,7 @@ class TraegerGrill(ClimateEntity, TraegerBaseEntity):
         super().__init__(client, grill_id, name="Grill Climate", coordinator=coordinator)
         self._attr_unique_id = f"{grill_id}_climate"
         self._attr_entity_registry_visible_default = True
-        _LOGGER.debug("Initialized climate {self.entity_id} for grill {grill_id}")
+        _LOGGER.debug("Initialized climate %s for grill %s", self._attr_unique_id, grill_id)
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -213,7 +213,7 @@ class TraegerGrill(ClimateEntity, TraegerBaseEntity):
         else:
             await self.client.shutdown_grill(self.grill_id)
         if hasattr(self.client, "trigger_mqtt_refresh"):
-            _LOGGER.debug("Requesting MQTT poke after hvac_mode change for {self.entity_id}")
+            _LOGGER.debug("Requesting MQTT poke after hvac_mode change for %s", self.entity_id)
             await self.client.trigger_mqtt_refresh(self.grill_id)
         self.async_schedule_update_ha_state()
 
@@ -222,7 +222,9 @@ class TraegerGrill(ClimateEntity, TraegerBaseEntity):
         if temperature is not None:
             await self.client.set_temperature(self.grill_id, int(temperature))
             if hasattr(self.client, "trigger_mqtt_refresh"):
-                _LOGGER.debug("Requesting MQTT poke after target temp change for {self.entity_id}")
+                _LOGGER.debug(
+                    "Requesting MQTT poke after target temp change for %s", self.entity_id
+                )
                 await self.client.trigger_mqtt_refresh(self.grill_id)
             self.async_schedule_update_ha_state()
 
@@ -240,7 +242,7 @@ class TraegerGrillProbe(ClimateEntity, TraegerBaseEntity):
         self.accessory_id = channel
         self._attr_unique_id = f"{grill_id}_probe_{channel}"
         self._attr_entity_registry_visible_default = True
-        _LOGGER.debug("Initialized probe {self.entity_id} for grill {grill_id}")
+        _LOGGER.debug("Initialized probe %s for grill %s", self._attr_unique_id, grill_id)
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()

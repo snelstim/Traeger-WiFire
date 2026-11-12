@@ -304,3 +304,49 @@ def test_options_flow_does_not_assign_config_entry():
     handler = config_flow.BlueprintOptionsFlowHandler(entry)
 
     assert handler.options == {"sensor": True}
+
+
+# --- Bluetooth probe sensor -----------------------------------------------------
+
+
+@pytest.mark.parametrize("units", [CELSIUS, FAHRENHEIT])
+def test_bluetooth_probe_sensor_unit_follows_grill_units(units):
+    _install_stubs()
+    module = _load_local("sensor")
+    sensor = module.TraegerBluetoothProbeSensor(
+        _Client(units), "grill-1", "Grill", "BT0", _Coordinator({})
+    )
+
+    assert sensor.native_unit_of_measurement == units
+    assert sensor._attr_device_class == "temperature"
+
+
+# --- client: units flag ---------------------------------------------------------
+
+
+def _client_with_status(status):
+    _install_stubs()
+    _module("aiohttp")
+    _module("aiomqtt", Client=object, MqttError=Exception)
+    _module("async_timeout")
+    _module("homeassistant.helpers.event", async_track_time_interval=None)
+    module = _load_local("traeger")
+    client = module.traeger.__new__(module.traeger)
+    client.grill_status = {"grill-1": {"status": status}}
+    return client
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        ({"units": 0, "connected": True}, CELSIUS),
+        ({"units": 1, "connected": True}, FAHRENHEIT),
+        # A message without the flag must not flip a Fahrenheit grill to Celsius.
+        ({"connected": True}, FAHRENHEIT),
+        ({}, FAHRENHEIT),
+    ],
+)
+def test_units_flag_only_zero_means_celsius(status, expected):
+    client = _client_with_status(status)
+
+    assert client.get_units_for_device("grill-1") == expected

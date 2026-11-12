@@ -436,9 +436,10 @@ class traeger:
         state = self.grill_status.get(thingName, {}).get("status", {})
         if not state:
             return UnitOfTemperature.FAHRENHEIT
+        # Only an explicit 0 means Celsius; a missing flag defaults to Fahrenheit.
         return (
             UnitOfTemperature.CELSIUS
-            if state.get("units", 0) == 0
+            if state.get("units") == 0
             else UnitOfTemperature.FAHRENHEIT
         )
 

@@ -57,9 +57,13 @@ class TraegerBluetoothProbeSensor(TraegerBaseEntity, SensorEntity):
         self.channel = channel
         self._attr_unique_id = f"{grill_id}_bt_probe_{channel}"
         self._attr_name = f"{name} BT Probe {channel}"
-        self._attr_native_unit_of_measurement = UnitOfTemperature.FAHRENHEIT
         self._attr_device_class = SensorDeviceClass.TEMPERATURE
         self._attr_state_class = SensorStateClass.MEASUREMENT
+
+    @property
+    def native_unit_of_measurement(self):
+        """Report in the unit the grill is set to."""
+        return self.grill_units
 
     def _find_probe(self) -> dict | None:
         """Find this probe in the accessory list by Channel ID."""
